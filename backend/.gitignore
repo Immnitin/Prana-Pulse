@@ -1,0 +1,26 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# IDE and editor directories
+.idea/
+.vscode/
+
+# Datasets and large model files
+# It's good practice to not commit large data files to Git.
+# You can uncomment these if you want to exclude them.
+# *.csv
+# *.sav
+
