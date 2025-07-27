@@ -1,22 +1,36 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+
+// Component/Page Imports
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { NewAssessmentPage } from './pages/NewAsessmentPage';
+// FIX: Corrected typo in the filename from "NewAsessmentPage" to "NewAssessmentPage"
+import { NewAssessmentPage } from './pages/NewAssessmentPage'; 
+import { ReportPage } from './pages/ReportPage'; 
 import { ProtectedRoute } from './components/ProtectedRoute';
+
+// IMPROVEMENT: A simple component for handling 404 Not Found pages.
+const NotFoundPage = () => (
+  <div style={{ textAlign: 'center', marginTop: '50px' }}>
+    <h2>404 - Page Not Found</h2>
+    <p>The page you are looking for does not exist.</p>
+    <Link to="/" style={{ color: 'blue' }}>Go to Homepage</Link>
+  </div>
+);
+
 
 function AnimatedRoutes() {
     const location = useLocation();
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* Public routes that anyone can access */}
+                {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
-                {/* Protected routes that require a user to be logged in */}
+                {/* Protected routes */}
                 <Route 
                     path="/dashboard" 
                     element={
@@ -33,16 +47,27 @@ function AnimatedRoutes() {
                         </ProtectedRoute>
                     } 
                 />
+                <Route 
+                    path="/report" 
+                    element={
+                        <ProtectedRoute>
+                            <ReportPage />
+                        </ProtectedRoute>
+                    } 
+                />
 
-                {/* The root path redirects to the dashboard if logged in */}
+                {/* Root path redirect */}
                 <Route 
                     path="/" 
                     element={
                         <ProtectedRoute>
-                            <Navigate to="/dashboard" />
+                            <Navigate to="/dashboard" replace />
                         </ProtectedRoute>
                     } 
                 />
+
+                {/* IMPROVEMENT: Catches any route that isn't defined above */}
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </AnimatePresence>
     );
