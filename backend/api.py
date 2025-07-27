@@ -5,6 +5,7 @@ import requests
 import json
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,6 +19,8 @@ if not OPENROUTER_API_KEY:
 
 # Initialize the Flask application
 app = Flask(__name__)
+
+CORS(app) 
 
 # --- Load Local Models and Scalers ---
 try:
