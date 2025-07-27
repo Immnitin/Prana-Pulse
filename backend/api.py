@@ -4,7 +4,7 @@ import os
 import requests
 import json
 from flask import Flask, request, jsonify
-from dotenv import load_dotenv # Import the new library
+from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,6 +12,9 @@ load_dotenv()
 # --- Configuration ---
 # Securely get the API key from the environment variable
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+if not OPENROUTER_API_KEY:
+    print("CRITICAL ERROR: OPENROUTER_API_KEY not found in .env file.")
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -27,7 +30,7 @@ except FileNotFoundError as e:
     print(f"CRITICAL ERROR: Could not load a model or scaler file. {e}")
     hd_model, hd_scaler, db_model, db_scaler = None, None, None, None
 
-# --- LLM Helper Function (Updated for Indian Context) ---
+# --- LLM Helper Function (Updated with more robust prompt) ---
 def generate_detailed_llm_response(disease_name, risk_status, user_data, diet_focus):
     """
     Calls an LLM to generate a detailed, structured JSON response with comprehensive explanations
@@ -36,28 +39,25 @@ def generate_detailed_llm_response(disease_name, risk_status, user_data, diet_fo
     user_data_summary = json.dumps(user_data)
 
     prompt = f"""
-    You are an expert AI health analyst with deep knowledge of Indian culture and cuisine. Your task is to analyze a health risk assessment for a user from India and provide a detailed, structured, and empathetic explanation in JSON format.
+    You are an expert AI health analyst. Your task is to analyze a health risk assessment and provide a detailed explanation in JSON format.
 
     **Health Assessment Summary:**
     - **Condition:** {disease_name}
-    - **Calculated Risk Level:** {risk_status}
-    - **User's Health Data (in JSON format):** {user_data_summary}
+    - **Risk Level:** {risk_status}
+    - **User's Data:** {user_data_summary}
 
     **Instructions:**
-    Generate a JSON object with the exact following keys: "risk_assessment", "key_factors_analysis", "lifestyle_recommendations", "diet_plan".
+    Generate a JSON object with the exact keys: "risk_assessment", "key_factors_analysis", "lifestyle_recommendations", "diet_plan".
+    - The value for each key MUST be a single string.
+    - To create new lines or bullet points within a string, you MUST use the '\\n' character.
+    - Ensure the final output is a single, perfectly valid JSON object and nothing else.
 
-    1.  **risk_assessment**: (String) Write a gentle, clear summary of the risk level.
+    1.  **risk_assessment**: Write a gentle summary of the risk level.
+    2.  **key_factors_analysis**: Provide a "Health Vitals Report Card". Analyze EACH user data point. Comment on whether the value is healthy, borderline, or a risk factor, and explain its significance.
+    3.  **lifestyle_recommendations**: Provide an elaborated guide for lifestyle changes relevant to an Indian context (yoga, pranayama, walking). Cover Physical Activity, Stress Management, and Sleep.
+    4.  **diet_plan**: Provide a "Sample 3-Day Indian Meal Plan" focusing on '{diet_focus}'. Include common Indian dishes for Breakfast, Lunch, and Dinner.
 
-    2.  **key_factors_analysis**: (String) Provide a "Health Vitals Report Card". Analyze EACH of the user's data points. For each factor, comment on whether the value is in a healthy range, borderline, or a risk factor, and briefly explain its significance. Use '\\n' for new lines.
-
-    3.  **lifestyle_recommendations**: (String) Provide an elaborated guide for lifestyle changes relevant to an Indian context. Cover these areas:
-        - **Physical Activity:** Suggest accessible activities like brisk walking, cycling, or incorporating yoga and pranayama into the daily routine. Mention frequency and duration.
-        - **Stress Management:** Recommend techniques like meditation (dhyana), mindfulness, and deep breathing exercises.
-        - **Sleep:** Emphasize the importance of 7-8 hours of quality sleep.
-
-    4.  **diet_plan**: (String) This is very important. Provide a "Sample 3-Day Indian Meal Plan" focusing on '{diet_focus}'. The plan must include common Indian dishes for Breakfast, Lunch, and Dinner. For example, suggest items like poha, idli, roti (whole wheat), dal, sabzi (seasonal vegetables), salads, and curd. Emphasize using whole grains and reducing oil and sugar.
-
-    IMPORTANT: The entire output must be a single, valid JSON object. Do not include any text before or after the JSON.
+    Your entire response must be only the JSON object.
     """
 
     try:
@@ -78,14 +78,9 @@ def generate_detailed_llm_response(disease_name, risk_status, user_data, diet_fo
 
     except requests.exceptions.RequestException as e:
         print(f"Error calling LLM: {e}")
-        return json.dumps({
-            "risk_assessment": "Error: Could not generate AI analysis.",
-            "key_factors_analysis": "There was an issue analyzing the provided health data.",
-            "lifestyle_recommendations": "Please consult a healthcare professional for guidance.",
-            "diet_plan": "Dietary recommendations could not be generated at this time."
-        })
+        return json.dumps({"error": "Could not connect to the AI analysis service."})
 
-# --- API Endpoints (Updated to pass the new diet focus) ---
+# --- API Endpoints (Updated with better error handling) ---
 @app.route('/predict/heart', methods=['POST'])
 def predict_heart():
     user_data = request.get_json()
@@ -96,7 +91,6 @@ def predict_heart():
         
         prediction = hd_model.predict(input_scaled)[0]
         risk_probability = hd_model.predict_proba(input_scaled)[0][1]
-        
         risk_status = "High" if prediction == 1 else "Low"
         
         llm_json_string = generate_detailed_llm_response(
@@ -106,14 +100,26 @@ def predict_heart():
             diet_focus="heart-healthy Indian cuisine (low sodium, less oil, high fiber)"
         )
         
+        try:
+            # Attempt to parse the string from the LLM into a JSON object
+            explanation_json = json.loads(llm_json_string)
+        except json.JSONDecodeError as e:
+            # If parsing fails, log the error and the bad response from the LLM
+            print(f"--- LLM JSON PARSE ERROR ---")
+            print(f"Error: {e}")
+            print(f"Raw LLM Response:\n{llm_json_string}")
+            print(f"--------------------------")
+            # Return a user-friendly error in the final JSON
+            explanation_json = {"error": "The AI-generated analysis was malformed. Please try again."}
+
         final_response = {
             "risk_score": round(risk_probability, 2),
-            "explanation": json.loads(llm_json_string)
+            "explanation": explanation_json
         }
         return jsonify(final_response)
 
     except Exception as e:
-        return jsonify({'error': f"An error occurred: {str(e)}"}), 400
+        return jsonify({'error': f"An error occurred during local prediction: {str(e)}"}), 400
 
 
 @app.route('/predict/diabetes', methods=['POST'])
@@ -137,7 +143,6 @@ def predict_diabetes():
         
         prediction = db_model.predict(input_df)[0]
         risk_probability = db_model.predict_proba(input_df)[0][1]
-
         risk_status = "High" if prediction == 1 else "Low"
         
         llm_json_string = generate_detailed_llm_response(
@@ -147,14 +152,23 @@ def predict_diabetes():
             diet_focus="diabetic-friendly Indian cuisine (low glycemic index, whole grains like atta and millets, lean protein)"
         )
 
+        try:
+            explanation_json = json.loads(llm_json_string)
+        except json.JSONDecodeError as e:
+            print(f"--- LLM JSON PARSE ERROR ---")
+            print(f"Error: {e}")
+            print(f"Raw LLM Response:\n{llm_json_string}")
+            print(f"--------------------------")
+            explanation_json = {"error": "The AI-generated analysis was malformed. Please try again."}
+
         final_response = {
             "risk_score": round(risk_probability, 2),
-            "explanation": json.loads(llm_json_string)
+            "explanation": explanation_json
         }
         return jsonify(final_response)
 
     except Exception as e:
-        return jsonify({'error': f"An error occurred: {str(e)}"}), 400
+        return jsonify({'error': f"An error occurred during local prediction: {str(e)}"}), 400
 
 # Run the Flask server
 if __name__ == '__main__':
