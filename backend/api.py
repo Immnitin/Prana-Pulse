@@ -11,7 +11,6 @@ from flask_cors import CORS
 load_dotenv()
 
 # --- Configuration ---
-# Securely get the API key from the environment variable
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 if not OPENROUTER_API_KEY:
@@ -19,7 +18,6 @@ if not OPENROUTER_API_KEY:
 
 # Initialize the Flask application
 app = Flask(__name__)
-
 CORS(app) 
 
 # --- Load Local Models and Scalers ---
@@ -42,25 +40,28 @@ def generate_detailed_llm_response(disease_name, risk_status, user_data, diet_fo
     user_data_summary = json.dumps(user_data)
 
     prompt = f"""
-    You are an expert AI health analyst. Your task is to analyze a health risk assessment and provide a detailed explanation in JSON format.
+    You are an expert AI health analyst with deep knowledge of Indian culture and cuisine. Your task is to analyze a health risk assessment and provide a detailed, structured, and empathetic explanation in JSON format. The tone should be professional, reassuring, and highly refined.
 
     **Health Assessment Summary:**
     - **Condition:** {disease_name}
-    - **Risk Level:** {risk_status}
-    - **User's Data:** {user_data_summary}
+    - **Calculated Risk Level:** {risk_status}
+    - **User's Health Data:** {user_data_summary}
 
     **Instructions:**
-    Generate a JSON object with the exact keys: "risk_assessment", "key_factors_analysis", "lifestyle_recommendations", "diet_plan".
-    - The value for each key MUST be a single string.
-    - To create new lines or bullet points within a string, you MUST use the '\\n' character.
-    - Ensure the final output is a single, perfectly valid JSON object and nothing else.
+    Generate a JSON object with the exact following keys: "AI_Clinical_Assessment", "Risk_Factor_Analysis", "Lifestyle_Recommendations", "Personal_Nutrition_Plan".
 
-    1.  **risk_assessment**: Write a gentle summary of the risk level.
-    2.  **key_factors_analysis**: Provide a "Health Vitals Report Card". Analyze EACH user data point. Comment on whether the value is healthy, borderline, or a risk factor, and explain its significance.
-    3.  **lifestyle_recommendations**: Provide an elaborated guide for lifestyle changes relevant to an Indian context (yoga, pranayama, walking). Cover Physical Activity, Stress Management, and Sleep.
-    4.  **diet_plan**: Provide a "Sample 3-Day Indian Meal Plan" focusing on '{diet_focus}'. Include common Indian dishes for Breakfast, Lunch, and Dinner.
+    1.  **"AI_Clinical_Assessment"**: (String) Write a gentle, clear, and elaborated summary of the risk level. Explain what the risk level implies in a reassuring manner. Do not use asterisks or markdown.
 
-    Your entire response must be only the JSON object.
+    2.  **"Risk_Factor_Analysis"**: (Object) This is critical. Create a JSON object where each key is a parameter from the user's health data (e.g., "age", "trestbps"). The value for each key must be a string providing a concise but insightful analysis of that specific parameter (e.g., "A cholesterol level of 233 mg/dL is considered borderline high. In the Indian context, where diets can be rich in fats, managing this is key to preventing plaque buildup in arteries.").
+
+    3.  **"Lifestyle_Recommendations"**: (String) Provide a refined, paragraph-style guide for lifestyle changes relevant to an Indian context. Use '\\n' for paragraph breaks. Elaborate on:
+        - **Physical Activity:** Suggest accessible activities like post-dinner walks (a common Indian practice), cycling, or incorporating specific yoga asanas like Surya Namaskar.
+        - **Stress Management:** Recommend techniques like meditation (dhyana), pranayama (like Anulom Vilom), and mindfulness.
+        - **Sleep:** Emphasize the importance of a consistent sleep schedule.
+
+    4.  **"Personal_Nutrition_Plan"**: (Object) Provide a "Sample 3-Day Indian Meal Plan" focusing on '{diet_focus}'. The JSON object should have three keys: "Day1", "Day2", and "Day3". The value for each day should be a string detailing Breakfast, Lunch, and Dinner. Be specific with dishes (e.g., "Breakfast: 2 vegetable idlis with a small bowl of sambar."). Emphasize healthy cooking methods like steaming or using an air fryer instead of deep frying.
+
+    IMPORTANT: Your entire response must be ONLY the JSON object. Do not add any introductory text like 'Here is the JSON you requested.' or any text after the final closing brace. Ensure all strings are properly quoted and escaped.
     """
 
     try:
@@ -117,7 +118,7 @@ def predict_heart():
 
         final_response = {
             "risk_score": round(risk_probability, 2),
-            "explanation": explanation_json
+            **explanation_json
         }
         return jsonify(final_response)
 
@@ -129,13 +130,23 @@ def predict_heart():
 def predict_diabetes():
     user_data = request.get_json()
     try:
-        model_columns = ['age', 'hypertension', 'heart_disease', 'bmi', 'HbA1c_level', 'blood_glucose_level', 'gender_Male', 'smoking_history_No Info', 'smoking_history_current', 'smoking_history_ever', 'smoking_history_former', 'smoking_history_not current']
+        # This list of columns now perfectly matches the columns created by the training script
+        model_columns = [
+            'age', 'hypertension', 'heart_disease', 'bmi', 'HbA1c_level',
+            'blood_glucose_level', 'gender_Male', 'smoking_history_current',
+            'smoking_history_ever', 'smoking_history_former',
+            'smoking_history_never', 'smoking_history_not current'
+        ]
+        
         input_df = pd.DataFrame(columns=model_columns, index=[0]).fillna(0)
+
         for key, value in user_data.items():
             if key in model_columns:
                 input_df.loc[0, key] = value
+        
         if 'gender' in user_data and user_data['gender'] == 'Male':
             input_df.loc[0, 'gender_Male'] = 1
+        
         if 'smoking_history' in user_data:
             smoking_col = f"smoking_history_{user_data['smoking_history']}"
             if smoking_col in model_columns:
@@ -166,7 +177,7 @@ def predict_diabetes():
 
         final_response = {
             "risk_score": round(risk_probability, 2),
-            "explanation": explanation_json
+            **explanation_json
         }
         return jsonify(final_response)
 
