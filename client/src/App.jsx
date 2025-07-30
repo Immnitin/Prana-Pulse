@@ -1,82 +1,99 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase-config'; // Ensure this path is correct
 
-// Component/Page Imports
+// --- Page Imports ---
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
-// FIX: Corrected typo in the filename from "NewAsessmentPage" to "NewAssessmentPage"
-import { NewAssessmentPage } from './pages/NewAssessmentPage'; 
-import { ReportPage } from './pages/ReportPage'; 
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { NewAssessmentPage } from './pages/NewAssessmentPage';
+import { HealthReportPage } from './pages/HealthReportPage'; 
+import { AskPranaPulse } from './pages/AskPranaPulse'; // Import the new page
 
-// IMPROVEMENT: A simple component for handling 404 Not Found pages.
-const NotFoundPage = () => (
-  <div style={{ textAlign: 'center', marginTop: '50px' }}>
-    <h2>404 - Page Not Found</h2>
-    <p>The page you are looking for does not exist.</p>
-    <Link to="/" style={{ color: 'blue' }}>Go to Homepage</Link>
-  </div>
+/**
+ * A simple loading spinner component to show while checking auth status.
+ */
+const LoadingSpinner = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <p>Loading...</p>
+  </div>
 );
 
+/**
+ * A component to protect routes that require authentication.
+ */
+const ProtectedRoute = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const location = useLocation();
 
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
+/**
+ * A simple component for handling 404 Not Found pages.
+ */
+const NotFoundPage = () => (
+  <div style={{ textAlign: 'center', marginTop: '50px' }}>
+    <h2>404 - Page Not Found</h2>
+    <p>The page you are looking for does not exist.</p>
+    <Link to="/" style={{ color: 'blue' }}>Go to Homepage</Link>
+  </div>
+);
+
+/**
+ * Defines all the application routes.
+ */
 function AnimatedRoutes() {
-    const location = useLocation();
-    return (
-        <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-                {/* Public routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-                {/* Protected routes */}
-                <Route 
-                    path="/dashboard" 
-                    element={
-                        <ProtectedRoute>
-                            <DashboardPage />
-                        </ProtectedRoute>
-                    } 
-                />
-                <Route 
-                    path="/assessment" 
-                    element={
-                        <ProtectedRoute>
-                            <NewAssessmentPage />
-                        </ProtectedRoute>
-                    } 
-                />
-                <Route 
-                    path="/report" 
-                    element={
-                        <ProtectedRoute>
-                            <ReportPage />
-                        </ProtectedRoute>
-                    } 
-                />
+        {/* Protected routes */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/assessment" element={<ProtectedRoute><NewAssessmentPage /></ProtectedRoute>} />
+        <Route path="/report" element={<ProtectedRoute><HealthReportPage /></ProtectedRoute>} />
+        <Route path="/ask-prana" element={<ProtectedRoute><AskPranaPulse /></ProtectedRoute>} />
 
-                {/* Root path redirect */}
-                <Route 
-                    path="/" 
-                    element={
-                        <ProtectedRoute>
-                            <Navigate to="/dashboard" replace />
-                        </ProtectedRoute>
-                    } 
-                />
+        {/* Root path redirect */}
+        <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
 
-                {/* IMPROVEMENT: Catches any route that isn't defined above */}
-                <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-        </AnimatePresence>
-    );
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AnimatePresence>
+  );
 }
 
+/**
+ * The main App component that sets up the router.
+ */
 export default function App() {
-  return (
-    <BrowserRouter>
-      <AnimatedRoutes />
-    </BrowserRouter>
-  );
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
+    </BrowserRouter>
+  );
 }
