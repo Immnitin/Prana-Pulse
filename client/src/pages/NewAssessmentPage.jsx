@@ -225,7 +225,7 @@ export function NewAssessmentPage() {
     };
 
     if (isLoading) {
-        return <div className="flex h-screen items-center justify-center bg-gray-100"><TypingIndicator /></div>;
+        return <div className="flex h-screen items-center justify-center text-center"><HeartPulse className="h-12 w-12 text-blue-600 animate-pulse" /></div>;
     }
 
     return (

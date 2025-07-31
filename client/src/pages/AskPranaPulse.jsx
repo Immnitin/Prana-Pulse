@@ -24,9 +24,7 @@ const LoadingDots = () => (
 );
 
 export  function AskPranaPulse() {
-  // API Configuration
-  const API_KEY = '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';
-  
+  // State management for messages, input, loading, etc.
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -44,11 +42,12 @@ export  function AskPranaPulse() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedCondition, setSelectedCondition] = useState('');
   
+  // Refs for DOM elements
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // Health query suggestions
+  // Pre-defined health query suggestions for user interaction
   const healthQueries = [
     { icon: Heart, text: "Heart health checkup", category: "cardiology" },
     { icon: Activity, text: "Diabetes management", category: "endocrinology" },
@@ -57,16 +56,17 @@ export  function AskPranaPulse() {
     { icon: Pill, text: "Medication guidance", category: "pharmacy" }
   ];
 
-  // Auto-scroll to bottom
+  // Function to automatically scroll to the latest message
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // useEffect to scroll to bottom whenever messages state updates
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Enhanced greeting message
+  // The initial greeting message from the bot
   const greetingMessage = `👋 **Welcome to Prana-Pulse AI!**
 
 I'm your personal health and wellness companion, powered by advanced AI. I'm here to help you explore:
@@ -81,7 +81,7 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
 
 *Please remember: I provide information for educational purposes. Always consult healthcare professionals for medical decisions.*`;
 
-  // Get user location
+  // Function to get the user's geographical location
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -93,7 +93,7 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
         },
         (error) => {
           console.log('Location access denied:', error);
-          // Use default location (can be customized)
+          // Fallback to a default location if access is denied
           setUserLocation({
             latitude: 17.4065, // Hyderabad coordinates as fallback
             longitude: 78.4772,
@@ -104,15 +104,16 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
     }
   };
 
+  // useEffect for initial setup on component mount
   useEffect(() => {
     getUserLocation();
     
-    // Page load animation
+    // Trigger page loaded state for animations
     const pageLoadTimer = setTimeout(() => {
       setIsPageLoaded(true);
     }, 500);
 
-    // Enhanced typing effect for greeting
+    // Typing effect for the initial greeting message
     const startTyping = setTimeout(() => {
       const words = greetingMessage.split(' ');
       let currentIndex = 0;
@@ -136,46 +137,43 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
       return () => clearInterval(typeWriter);
     }, 1000);
 
+    // Cleanup timers on component unmount
     return () => {
       clearTimeout(pageLoadTimer);
       clearTimeout(startTyping);
     };
   }, []);
 
-  // Enhanced message formatting
+  // Function to format message content with Markdown-like syntax to HTML
   const formatMessage = (text) => {
     return text
-      // Code blocks
       .replace(/```(\w+)?\n([\s\S]*?)```/g, '<div class="bg-gray-900 text-gray-100 p-4 rounded-xl overflow-x-auto my-4 border-l-4 border-blue-500"><pre><code class="text-sm">$2</code></pre></div>')
-      // Bold text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900 bg-yellow-50 px-1 rounded">$1</strong>')
-      // Italic text
       .replace(/\*(.*?)\*/g, '<em class="italic text-gray-700">$1</em>')
-      // Inline code
       .replace(/`([^`]+)`/g, '<code class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm font-mono border">$1</code>')
-      // Headers
       .replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold text-gray-800 mt-4 mb-2 border-b-2 border-blue-200 pb-1">$1</h3>')
       .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold text-gray-800 mt-4 mb-3 text-blue-700">$1</h2>')
       .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold text-gray-800 mt-4 mb-3 text-blue-800">$1</h1>')
-      // Emojis with larger size
       .replace(/🏥|💪|🧠|🩺|💊|👋|❤️|⚠️|🔄|📍|🏃‍♂️|🥗|💭|🌟/g, '<span class="text-xl inline-block mx-1">$&</span>')
-      // Unordered lists
       .replace(/^\- (.*$)/gim, '<li class="ml-6 list-disc my-2 text-gray-700 leading-relaxed">$1</li>')
-      // Ordered lists
       .replace(/^\d+\. (.*$)/gim, '<li class="ml-6 list-decimal my-2 text-gray-700 leading-relaxed">$1</li>')
-      // Important notes
       .replace(/\*\*Note:\*\*(.*)/g, '<div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 my-3 rounded-r-lg"><strong class="text-yellow-800">Note:</strong><span class="text-yellow-700">$1</span></div>')
-      // Warnings
       .replace(/\*\*Warning:\*\*(.*)/g, '<div class="bg-red-50 border-l-4 border-red-400 p-3 my-3 rounded-r-lg"><strong class="text-red-800">Warning:</strong><span class="text-red-700">$1</span></div>')
-      // Line breaks
-      .replace(/\n\n/g, '<br /><br />')
       .replace(/\n/g, '<br />');
   };
 
+  // Function to copy message text to clipboard
   const copyToClipboard = async (text, messageId) => {
     try {
       const plainText = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
-      await navigator.clipboard.writeText(plainText);
+      const textArea = document.createElement("textarea");
+      textArea.value = plainText;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
       setCopiedMessageId(messageId);
       setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (err) {
@@ -183,6 +181,7 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
     }
   };
 
+  // Main function to send a message to the AI and get a response
   const sendMessage = async (messageText = inputMessage) => {
     if (!messageText.trim()) return;
 
@@ -197,46 +196,40 @@ I'm your personal health and wellness companion, powered by advanced AI. I'm her
     setInputMessage('');
     setIsLoading(true);
 
+    // FIX: Use process.env for broader compatibility instead of import.meta.env
+    const API_KEY = process.env.VITE_OPENROUTER_API_KEY;
+
     try {
-      // Enhanced system prompt
+      // System prompt to guide the AI's behavior
       const systemPrompt = `You are Prana-Pulse AI, an expert health and wellness assistant. Provide comprehensive, well-structured, and empathetic health information. 
+      Guidelines:
+      - Use clear headings (##) for main topics
+      - Use bullet points (-) for lists
+      - Use **bold** for important terms
+      - Include relevant emojis naturally
+      - Always remind users to consult healthcare professionals
+      - Be conversational, supportive, and encouraging
+      - Provide actionable advice when appropriate
+      - Use **Note:** for important disclaimers
+      - Use **Warning:** for serious health concerns
+      Format your responses with proper structure and spacing for easy reading.`;
 
-Guidelines:
-- Use clear headings (##) for main topics
-- Use bullet points (-) for lists
-- Use **bold** for important terms
-- Include relevant emojis naturally
-- Always remind users to consult healthcare professionals
-- Be conversational, supportive, and encouraging
-- Provide actionable advice when appropriate
-- Use **Note:** for important disclaimers
-- Use **Warning:** for serious health concerns
-
-Format your responses with proper structure and spacing for easy reading.`;
-
+      // API call is now made directly to the OpenRouter API
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${API_KEY}`,
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "Prana-Pulse AI",
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           "model": "meta-llama/llama-3-8b-instruct",
           "messages": [
-            {
-              "role": "system",
-              "content": systemPrompt
-            },
+            { "role": "system", "content": systemPrompt },
             ...messages.filter(m => m.type !== 'bot' || m.id === 1).slice(-10).map(m => ({
               "role": m.type === 'user' ? 'user' : 'assistant',
               "content": m.content.replace(/<[^>]*>/g, '')
             })),
-            {
-              "role": "user",
-              "content": messageText
-            }
+            { "role": "user", "content": messageText }
           ],
           "temperature": 0.7,
           "max_tokens": 1000
@@ -256,6 +249,7 @@ Format your responses with proper structure and spacing for easy reading.`;
       };
 
       setMessages(prev => [...prev, botResponse]);
+
     } catch (error) {
       console.error('API Error:', error);
       const errorMessage = {
@@ -267,7 +261,7 @@ I'm experiencing connectivity problems right now. This could be due to:
 
 - Network connectivity issues
 - API service temporary unavailability  
-- Configuration problems
+- An incorrect or missing API Key in your .env.local file.
 
 **Please try again in a moment.** I'm here and ready to help with your health questions! 💙
 
@@ -280,6 +274,7 @@ I'm experiencing connectivity problems right now. This could be due to:
     }
   };
 
+  // Handler for quick query buttons
   const handleQuickQuery = (query) => {
     setInputMessage(query);
     setTimeout(() => {
@@ -287,11 +282,13 @@ I'm experiencing connectivity problems right now. This could be due to:
     }, 100);
   };
 
+  // Function to show the modal for finding nearby treatment centers
   const showNearbyTreatmentCenters = (condition) => {
     setSelectedCondition(condition);
     setShowLocationModal(true);
   };
 
+  // Function to regenerate the last bot response
   const regenerateResponse = async () => {
     if (messages.length < 2) return;
     
@@ -303,6 +300,7 @@ I'm experiencing connectivity problems right now. This could be due to:
     setTimeout(() => sendMessage(lastUserMessage.content), 100);
   };
 
+  // Handler for key presses in the input area (Enter to send)
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -310,6 +308,7 @@ I'm experiencing connectivity problems right now. This could be due to:
     }
   };
 
+  // Function to clear the chat history
   const clearChat = () => {
     setMessages([
       {
@@ -333,11 +332,12 @@ Feel free to ask me anything about your health! 💙`,
     ]);
   };
 
+  // Function to delete a specific message
   const deleteMessage = (messageId) => {
     setMessages(prev => prev.filter(m => m.id !== messageId));
   };
 
-  // Loading screen with enhanced animation
+  // Loading screen displayed before the main app is ready
   if (!isPageLoaded) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100">
@@ -362,9 +362,10 @@ Feel free to ask me anything about your health! 💙`,
     );
   }
 
+  // Main component render
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 animate-in fade-in duration-500">
-      {/* Enhanced Header */}
+      {/* Header Section */}
       <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-lg animate-in slide-in-from-top duration-700">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -418,7 +419,7 @@ Feel free to ask me anything about your health! 💙`,
         </div>
       </div>
 
-      {/* Health Query Suggestions */}
+      {/* Health Query Suggestions Section */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 py-3 animate-in slide-in-from-top duration-700 delay-200">
         <div className="max-w-6xl mx-auto">
           <p className="text-sm text-gray-600 mb-3 font-medium">Quick Health Queries:</p>
@@ -438,26 +439,11 @@ Feel free to ask me anything about your health! 💙`,
         </div>
       </div>
 
-      {/* Messages Area with Hidden Scrollbar */}
+      {/* Messages Display Area */}
       <div 
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-6 py-6 animate-in slide-in-from-bottom duration-700 delay-400 scrollbar-hide"
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitScrollbar: { display: 'none' }
-        }}
+        className="flex-1 overflow-y-auto px-6 py-6 animate-in slide-in-from-bottom duration-700 delay-400"
       >
-        <style jsx>{`
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-        `}</style>
-        
         <div className="max-w-5xl mx-auto space-y-8">
           {messages.map((message, index) => (
             <div
@@ -465,9 +451,8 @@ Feel free to ask me anything about your health! 💙`,
               className={`group flex items-start gap-4 ${
                 message.type === 'user' ? 'flex-row-reverse' : ''
               } animate-in slide-in-from-bottom duration-500`}
-              style={{ animationDelay: `${index * 100 + 500}ms` }}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Enhanced Avatar */}
               <div className={`flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0 shadow-lg transition-transform hover:scale-105 ${
                 message.type === 'user' 
                   ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white' 
@@ -476,7 +461,6 @@ Feel free to ask me anything about your health! 💙`,
                 {message.type === 'user' ? <User size={16} /> : <HeartPulseIcon size={16} />}
               </div>
 
-              {/* Enhanced Message Content */}
               <div className={`flex-1 max-w-4xl ${message.type === 'user' ? 'text-right' : ''}`}>
                 <div className={`inline-block px-6 py-4 rounded-3xl transition-all hover:shadow-lg ${
                   message.type === 'user'
@@ -484,7 +468,7 @@ Feel free to ask me anything about your health! 💙`,
                     : 'bg-white border border-blue-100 text-gray-800 shadow-md hover:border-blue-200 hover:shadow-xl'
                 }`}>
                   <div 
-                    className={`leading-relaxed ${message.type === 'user' ? 'text-white' : ''}`}
+                    className={`leading-relaxed text-left ${message.type === 'user' ? 'text-white' : ''}`}
                     dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
                   />
                   {message.isTyping && (
@@ -494,7 +478,6 @@ Feel free to ask me anything about your health! 💙`,
                   )}
                 </div>
                 
-                {/* Enhanced Message Actions */}
                 <div className={`flex items-center gap-3 mt-3 opacity-0 group-hover:opacity-100 transition-all duration-300 ${
                   message.type === 'user' ? 'justify-end' : ''
                 }`}>
@@ -526,7 +509,6 @@ Feel free to ask me anything about your health! 💙`,
             </div>
           ))}
           
-          {/* Enhanced Loading State */}
           {isLoading && (
             <div className="flex items-start gap-4 animate-in slide-in-from-bottom duration-300">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
@@ -544,7 +526,7 @@ Feel free to ask me anything about your health! 💙`,
         </div>
       </div>
 
-      {/* Enhanced Input Area */}
+      {/* Input Area */}
       <div className="bg-white/95 backdrop-blur-sm border-t border-gray-200 px-6 py-5 shadow-2xl animate-in slide-in-from-bottom duration-700 delay-600">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-end gap-4">
@@ -581,7 +563,7 @@ Feel free to ask me anything about your health! 💙`,
         </div>
       </div>
 
-      {/* Location Modal for Treatment Centers */}
+      {/* Location Modal */}
       {showLocationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-in fade-in duration-300">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl animate-in zoom-in duration-300">
