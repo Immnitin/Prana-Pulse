@@ -11,6 +11,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { NewAssessmentPage } from './pages/NewAssessmentPage';
 import { HealthReportPage } from './pages/HealthReportPage'; 
 import { AskPranaPulse } from './pages/AskPranaPulse'; // Import the new page
+import { HealthReports } from './pages/HealthReports'; // Adjust path if needed
 
 /**
  * A simple loading spinner component to show while checking auth status.
@@ -76,6 +77,7 @@ function AnimatedRoutes() {
         <Route path="/assessment" element={<ProtectedRoute><NewAssessmentPage /></ProtectedRoute>} />
         <Route path="/report" element={<ProtectedRoute><HealthReportPage /></ProtectedRoute>} />
         <Route path="/ask-prana" element={<ProtectedRoute><AskPranaPulse /></ProtectedRoute>} />
+        <Route path="/reports" element={<HealthReports />} />
 
         {/* Root path redirect */}
         <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />

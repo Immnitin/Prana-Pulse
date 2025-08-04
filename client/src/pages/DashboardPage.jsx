@@ -26,6 +26,7 @@ const MoonIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" 
 // --- Reusable UI Components ---
 const Card = ({ children, className = '', gradient = false, glow = false }) => ( <div className={`bg-white/90 backdrop-blur-lg rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 ${gradient ? 'bg-gradient-to-br from-white/95 to-white/80' : ''} ${glow ? 'shadow-blue-500/10 hover:shadow-blue-500/20' : ''} ${className}`}> {children} </div> );
 
+
 const DiseasePredictionCard = ({ disease, prediction }) => {
     if (!prediction) {
         return <div className="p-4 text-center bg-gray-50 rounded-xl border"><p className="text-sm text-gray-500">No prediction data available.</p><Link to="/assessment" className="text-sm text-blue-600 hover:underline mt-2 block">Take Assessment</Link></div>
@@ -478,8 +479,7 @@ export function DashboardPage() {
                         <li><Link to="/dashboard" className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-3 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-sm"><ShieldCheckIcon className="h-4 w-4" /><span>Dashboard</span></Link></li>
                         <li><Link to="/assessment" className="flex items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-100/80 hover:text-gray-900 group hover:scale-105 duration-300 text-sm"><ActivityIcon className="h-4 w-4 group-hover:text-blue-600 transition-colors" /><span>Health Assessment</span></Link></li>
                         <li><Link to="/ask-prana" className="flex items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-100/80 hover:text-gray-900 group hover:scale-105 duration-300 text-sm"><BrainIcon className="h-4 w-4 group-hover:text-blue-600 transition-colors" /><span>Ask Prana-Pulse</span></Link></li>
-                        <li><Link to="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-100/80 hover:text-gray-900 group hover:scale-105 duration-300 text-sm"><FileTextIcon className="h-4 w-4 group-hover:text-blue-600 transition-colors" /><span>Health Reports</span></Link></li>
-                        <li><Link to="#" className="flex items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-100/80 hover:text-gray-900 group hover:scale-105 duration-300 text-sm"><UsersIcon className="h-4 w-4 group-hover:text-blue-600 transition-colors" /><span>Patient Management</span></Link></li>
+                        <li><Link to="/reports" className="flex items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition-all hover:bg-gray-100/80 hover:text-gray-900 group hover:scale-105 duration-300 text-sm"><FileTextIcon className="h-4 w-4 group-hover:text-blue-600 transition-colors" /><span>Health Reports</span></Link></li>
                     </ul>
                 </nav>
             </aside>
