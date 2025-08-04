@@ -18,7 +18,10 @@ const BrainIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="24"
 const CalendarIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>);
 const HeartIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>);
 const DropletIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>);
-
+const AppleIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/><path d="M10 2c1 .5 2 2 2 5"/></svg>);
+const SunriseIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>);
+const SunIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>);
+const MoonIcon = (props) => (<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>);
 
 // --- Reusable UI Components ---
 const Card = ({ children, className = '', gradient = false, glow = false }) => ( <div className={`bg-white/90 backdrop-blur-lg rounded-2xl border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 ${gradient ? 'bg-gradient-to-br from-white/95 to-white/80' : ''} ${glow ? 'shadow-blue-500/10 hover:shadow-blue-500/20' : ''} ${className}`}> {children} </div> );
@@ -36,18 +39,167 @@ const NoDataCard = ({ title, message }) => ( <div className="text-center p-8"><h
 
 const analyzeRecords = (records) => {
     if (!records || records.length < 2) {
-        return "Your health patterns are stable. Keep up the good work.";
+        return "Your health patterns are stable. Keep up the good work with regular monitoring and maintain healthy lifestyle choices.";
     }
-    const latestScore = parseFloat(records[records.length - 1].value);
-    const previousScore = parseFloat(records[records.length - 2].value);
+    
+    const scores = records.map(record => parseFloat(record.value)).filter(score => !isNaN(score));
+    if (scores.length === 0) return "Continue regular health monitoring for better insights.";
+    
+    const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const latestScore = scores[scores.length - 1];
+    const previousScore = scores.length > 1 ? scores[scores.length - 2] : latestScore;
+    
+    let trendAnalysis = "";
     if (latestScore < previousScore) {
-        return "Recent trends show a positive improvement in your health.";
+        trendAnalysis = "Recent trends show positive improvement in your health metrics. ";
+    } else if (latestScore > previousScore) {
+        trendAnalysis = "Recent trends indicate elevated risk factors requiring attention. ";
+    } else {
+        trendAnalysis = "Your health patterns remain stable with consistent monitoring. ";
     }
-    if (latestScore > previousScore) {
-        return "Recent trends indicate a slight increase in risk factors. Consistent monitoring is recommended.";
+    
+    let riskLevel = "";
+    if (averageScore < 0.3) {
+        riskLevel = "Your average risk profile is low - excellent work maintaining healthy habits. Continue with regular exercise, balanced nutrition, and routine health check-ups.";
+    } else if (averageScore < 0.6) {
+        riskLevel = "Your average risk profile is moderate. Focus on lifestyle improvements including diet optimization, increased physical activity, and stress management techniques.";
+    } else {
+        riskLevel = "Your average risk profile indicates higher concern. Immediate lifestyle interventions recommended - consult with healthcare providers for personalized treatment plans.";
     }
-    return "Your health patterns are stable. Continue to monitor your lifestyle.";
+    
+    return trendAnalysis + riskLevel;
 };
+
+const NutritionPlanCard = ({ latestNutritionPlan }) => {
+    const [activeDay, setActiveDay] = useState(1);
+
+    if (!latestNutritionPlan) {
+        return (
+            <Card className="h-full" glow>
+                <div className="p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl">
+                            <AppleIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Your Nutrition Plan</h3>
+                            <p className="text-sm text-gray-500">Personalized dietary recommendations</p>
+                        </div>
+                    </div>
+                    <NoDataCard title="No Nutrition Plan Available" message="Complete a health assessment to get your personalized nutrition recommendations." />
+                </div>
+            </Card>
+        );
+    }
+
+    const { assessmentType, explanation, createdAt } = latestNutritionPlan;
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "Recently";
+        try {
+            return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', { 
+                month: 'long', day: 'numeric' 
+            });
+        } catch {
+            return "Recently";
+        }
+    };
+
+    const formatDietPlan = (dietPlan) => {
+        if (!dietPlan) return [];
+        return dietPlan.split('**Day').slice(1).map((day, index) => ({
+            day: index + 1,
+            meals: day.split('- ').slice(1).map(meal => meal.trim())
+        }));
+    };
+
+    const dietDays = formatDietPlan(explanation?.diet_plan);
+    const activeDayData = dietDays.find(d => d.day === activeDay);
+
+    const mealIcons = {
+        'Breakfast': <SunriseIcon className="h-6 w-6 text-orange-400" />,
+        'Lunch': <SunIcon className="h-6 w-6 text-yellow-500" />,
+        'Dinner': <MoonIcon className="h-6 w-6 text-indigo-400" />,
+    };
+
+    return (
+        <Card className="h-full" glow>
+            <div className="p-6">
+                {/* --- Header --- */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl shadow-lg">
+                            <AppleIcon className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-900">Your Nutrition Plan</h3>
+                            <p className="text-sm text-gray-500">Based on {assessmentType} assessment • {formatDate(createdAt)}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- Lifestyle Recommendations --- */}
+                {explanation?.lifestyle_recommendations && (
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                        <h4 className="font-semibold text-blue-900 mb-1 text-base">Lifestyle Recommendations</h4>
+                        <p className="text-sm text-blue-800 leading-relaxed">{explanation.lifestyle_recommendations}</p>
+                    </div>
+                )}
+
+                {/* --- Interactive Meal Plan --- */}
+                {dietDays.length > 0 && (
+                    <div>
+                        {/* Tabs for Day Selection */}
+                        <div className="flex border-b border-gray-200 mb-4">
+                            {dietDays.map(({ day }) => (
+                                <button
+                                    key={day}
+                                    onClick={() => setActiveDay(day)}
+                                    className={`px-4 py-2 text-sm font-semibold transition-colors duration-300 ${activeDay === day ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500 hover:text-blue-500'}`}
+                                >
+                                    Day {day}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Content for Active Day */}
+                        <div className="space-y-4">
+                            {activeDayData?.meals.map((meal, index) => {
+                                const colonIndex = meal.indexOf(':');
+                                if (colonIndex === -1) return null;
+
+                                const mealType = meal.substring(0, colonIndex).trim();
+                                const mealDesc = meal.substring(colonIndex + 1).trim();
+                                const icon = mealIcons[mealType] || <AppleIcon className="h-6 w-6 text-gray-400" />;
+
+                                return (
+                                    <div key={index} className="flex items-start gap-4 p-4 bg-white/70 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow duration-300">
+                                        <div className="flex-shrink-0 w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center">
+                                            {icon}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-gray-800">{mealType}</p>
+                                            <p className="text-gray-600 text-sm">{mealDesc}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+                
+                {/* --- Footer Link --- */}
+                <div className="mt-6 pt-4 border-t border-gray-200/80">
+                    <Link to="/assessment" className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-semibold group">
+                        <ActivityIcon className="h-4 w-4 transition-transform duration-300 group-hover:rotate-6" />
+                        Get a New Plan
+                    </Link>
+                </div>
+            </div>
+        </Card>
+    );
+};
+
 
 const PastRecordCard = ({ title, icon, color, records }) => {
     const summary = analyzeRecords(records);
@@ -64,7 +216,7 @@ const PastRecordCard = ({ title, icon, color, records }) => {
                 {records && records.length > 0 ? (
                     <>
                         <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                            <h4 className="font-semibold text-blue-900 mb-1 text-sm">Summary Report</h4>
+                            <h4 className="font-semibold text-blue-900 mb-1 text-sm">Comprehensive Health Summary</h4>
                             <p className="text-sm text-blue-800 leading-relaxed">{summary}</p>
                         </div>
                         <div className="space-y-3">
@@ -83,7 +235,7 @@ const PastRecordCard = ({ title, icon, color, records }) => {
                         </div>
                     </>
                 ) : (
-                    <NoDataCard title="No Records Found" />
+                    <NoDataCard title="No Records Found" message="Complete health assessments to track your progress." />
                 )}
             </div>
         </Card>
@@ -107,6 +259,8 @@ const UserView = ({ userProfile }) => (
                 records={userProfile?.diabetesRecords || []}
             />
         </div>
+
+        <NutritionPlanCard latestNutritionPlan={userProfile?.latestNutritionPlan} />
 
         <Card glow>
             <div className="p-6">
@@ -238,23 +392,58 @@ export function DashboardPage() {
     const [isClinicianView, setIsClinicianView] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        // Define no-op cleanup functions to be reassigned later
+        let unsubscribeUserDoc = () => {};
+        let unsubscribeAssessments = () => {};
+
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
             if (user) {
-                const docRef = doc(db, "users", user.uid);
-                const unsubDoc = onSnapshot(docRef, (docSnap) => {
+                // Subscribe to user profile
+                const userDocRef = doc(db, "users", user.uid);
+                unsubscribeUserDoc = onSnapshot(userDocRef, (docSnap) => {
                     if (docSnap.exists()) {
                         setUserProfile(docSnap.data());
                     } else {
                         console.log("No user profile found in database!");
                     }
+                });
+
+                // Fetch latest nutrition plan from the user's assessments subcollection
+                const assessmentsQuery = query(
+                    collection(db, 'users', user.uid, 'assessments'), 
+                    where("userEmail", "==", user.email),
+                    orderBy("createdAt", "desc"),
+                    limit(1)
+                );
+                
+                unsubscribeAssessments = onSnapshot(assessmentsQuery, (querySnapshot) => {
+                    if (!querySnapshot.empty) {
+                        const latestAssessment = querySnapshot.docs[0].data();
+                        setUserProfile(prevProfile => ({
+                            ...(prevProfile || {}), // Guard against prevProfile being null
+                            ...prevProfile,
+                            latestNutritionPlan: latestAssessment
+                        }));
+                    }
+                    // Data fetching attempts are complete, so stop loading
+                    setIsLoading(false);
+                }, (error) => {
+                    // Also stop loading on error
+                    console.error("Error fetching assessments:", error);
                     setIsLoading(false);
                 });
-                return () => unsubDoc();
             } else {
                 navigate('/login');
             }
         });
-        return () => unsubscribe();
+
+        // This is the cleanup function for the useEffect hook.
+        // It will be called when the component unmounts.
+        return () => {
+            unsubscribeAuth();
+            unsubscribeUserDoc();
+            unsubscribeAssessments();
+        };
     }, [navigate]);
 
     const handleLogout = async () => {
@@ -295,8 +484,51 @@ export function DashboardPage() {
                 </nav>
             </aside>
             <div className="flex flex-1 flex-col md:ml-64">
-                <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/30 bg-white/90 backdrop-blur-xl px-4 md:px-6 shadow-md"><div className="flex items-center gap-3"><span className="text-xs font-medium text-gray-600">View Mode:</span><div className="relative inline-flex items-center rounded-xl bg-gray-100/90 p-0.5 shadow-inner"><button onClick={() => setIsClinicianView(false)} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ${!isClinicianView ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-600 hover:text-gray-900'}`}>Patient</button><button onClick={() => setIsClinicianView(true)} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ${isClinicianView ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-600 hover:text-gray-900'}`}>Clinician</button></div></div><div className="ml-auto flex items-center gap-4"><div className="relative group"><button className="flex items-center gap-2 rounded-xl border border-gray-200/50 p-1.5 pr-3 hover:bg-gray-50/80 transition-all hover:shadow-md duration-300"><div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">{userProfile?.name?.[0].toUpperCase() || 'U'}</div><div className="hidden md:block text-left"><span className="text-xs font-medium text-gray-900 block">{userProfile?.name}</span><span className="text-xs text-gray-500"></span></div></button><div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-gray-100 py-1 z-20 hidden group-hover:block"><div className="px-4 py-3 border-b border-gray-100"><p className="font-medium text-gray-900 text-xs">{userProfile?.name}</p><p className="text-xs text-gray-500">Age: {userProfile?.age}</p></div><button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50/80 transition-colors border-t border-gray-100"><LogOutIcon className="mr-2 h-3 w-3" /> Sign Out</button></div></div></div></header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto"><div className="mx-auto w-full max-w-7xl"><div className="mb-8"><h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2">{getGreeting()}, {userProfile?.name|| 'User'}!</h1><p className="text-gray-600 text-sm leading-relaxed">Your personalized health insights powered by AI analysis.</p><div className="flex items-center gap-4 mt-2 text-xs text-gray-500"><span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span><span className="flex items-center gap-1"><ClockIcon className="h-3 w-3" /> Last updated: Just now</span></div></div>{isClinicianView ? <ClinicianView /> : <UserView userProfile={userProfile} />}</div></main>
+                <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/30 bg-white/90 backdrop-blur-xl px-4 md:px-6 shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-medium text-gray-600">View Mode:</span>
+                        <div className="relative inline-flex items-center rounded-xl bg-gray-100/90 p-0.5 shadow-inner">
+                            <button onClick={() => setIsClinicianView(false)} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ${!isClinicianView ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-600 hover:text-gray-900'}`}>Patient</button>
+                            <button onClick={() => setIsClinicianView(true)} className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-300 ${isClinicianView ? 'bg-white text-blue-600 shadow-sm transform scale-105' : 'text-gray-600 hover:text-gray-900'}`}>Clinician</button>
+                        </div>
+                    </div>
+                    <div className="ml-auto flex items-center gap-4">
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 rounded-xl border border-gray-200/50 p-1.5 pr-3 hover:bg-gray-50/80 transition-all hover:shadow-md duration-300">
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">{userProfile?.name?.[0].toUpperCase() || 'U'}</div>
+                                <div className="hidden md:block text-left">
+                                    <span className="text-xs font-medium text-gray-900 block">{userProfile?.name}</span>
+                                    <span className="text-xs text-gray-500">{userProfile?.role || 'Patient'}</span>
+                                </div>
+                            </button>
+                            <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-gray-100 py-1 z-20 hidden group-hover:block">
+                                <div className="px-4 py-3 border-b border-gray-100">
+                                    <p className="font-medium text-gray-900 text-xs">{userProfile?.name}</p>
+                                    <p className="text-xs text-gray-500">Age: {userProfile?.age}</p>
+                                </div>
+                                <Link to="/settings" className="w-full text-left flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50/80 transition-colors">
+                                    <SettingsIcon className="mr-2 h-3 w-3" /> Settings
+                                </Link>
+                                <button onClick={handleLogout} className="w-full text-left flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-gray-50/80 transition-colors border-t border-gray-100">
+                                    <LogOutIcon className="mr-2 h-3 w-3" /> Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+                    <div className="mx-auto w-full max-w-7xl">
+                        <div className="mb-8">
+                            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-2">{getGreeting()}, {userProfile?.name|| 'User'}!</h1>
+                            <p className="text-gray-600 text-sm leading-relaxed">Your personalized health insights powered by AI analysis.</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                <span className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                                <span className="flex items-center gap-1"><ClockIcon className="h-3 w-3" /> Last updated: Just now</span>
+                            </div>
+                        </div>
+                        {isClinicianView ? <ClinicianView /> : <UserView userProfile={userProfile} />}
+                    </div>
+                </main>
             </div>
         </div>
     );
